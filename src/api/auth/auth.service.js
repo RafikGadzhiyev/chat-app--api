@@ -5,6 +5,7 @@ async function getUser(searchQuery) {
     .findOne(
       searchQuery,
     )
+    .select('+password')
     .lean();
 
   return user;
