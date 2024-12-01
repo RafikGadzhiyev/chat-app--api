@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+
 const authService = require('./auth.service');
 
 const User = require('../../models/User.model');
@@ -7,7 +9,89 @@ const authHelper = require('./auth.helper');
 
 async function signIn(req, res) {
   try {
+    const {
+      email,
+      password,
+    } = req.body;
 
+    const user = await authService
+      .getUser(
+        {
+          email: email,
+        },
+      );
+
+    if (!user) {
+      return res
+        .status(enumHelper.RESPONSE_STATUS_CODES.NOT_FOUND)
+        .json(
+          {
+            message: 'User does not exist!',
+          },
+        );
+    }
+
+    const passwordCompare = bcrypt.compareSync(
+      password,
+      user.password,
+    );
+
+    if (!passwordCompare) {
+      return res
+        .status(enumHelper.RESPONSE_STATUS_CODES.UNAUTHORIZED)
+        .json(
+          {
+            message: 'Incorrect credentials!',
+          },
+        );
+    }
+
+    const accessToken = authHelper
+      .generateToken(
+        {
+          _id: user._id,
+        },
+        {
+          expiresIn: '1h',
+        },
+        enumHelper.TOKEN_TYPES.ACCESS_TOKEN,
+      );
+
+    const refreshToken = authHelper
+      .generateToken(
+        {
+          _id: user._id,
+        },
+        {
+          expiresIn: '30d',
+        },
+        enumHelper.TOKEN_TYPES.REFRESH_TOKEN,
+      );
+
+    await User
+      .updateOne(
+        {
+          _id: user._id,
+        },
+        {
+          $set: {
+            refreshToken: refreshToken,
+          },
+        },
+      );
+
+    res.setHeader(
+      'Authorization',
+      `Bearer ${accessToken}`,
+    );
+
+    return res
+      .json(
+        {
+          token: accessToken,
+          user: user,
+        },
+      );
   } catch (err) {
     console.error(err);
   }
@@ -102,8 +186,8 @@ async function signUp(req, res) {
     return res
       .json(
         {
-          accessToken,
-          newUser,
+          token: accessToken,
+          user: newUser,
         },
       );
   } catch (err) {
