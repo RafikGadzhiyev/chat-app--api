@@ -85,6 +85,8 @@ async function signIn(req, res) {
       `Bearer ${accessToken}`,
     );
 
+    delete user.password;
+
     return res
       .json(
         {
