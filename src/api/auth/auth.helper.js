@@ -41,7 +41,55 @@ function generateToken(payload, options, tokenType) {
   );
 }
 
+function generateTokensAndCookie(res, payload, optionsPerTokenType) {
+  const accessTokenOptions = optionsPerTokenType[enumHelper.TOKEN_TYPES.ACCESS_TOKEN]
+    || {};
+
+  const refreshTokenOptions = optionsPerTokenType[enumHelper.TOKEN_TYPES.REFRESH_TOKEN]
+    || {};
+
+  const accessToken = generateToken(
+    payload,
+    accessTokenOptions,
+    enumHelper.TOKEN_TYPES.ACCESS_TOKEN,
+  );
+
+  const refreshToken = generateToken(
+    payload,
+    refreshTokenOptions,
+    enumHelper.TOKEN_TYPES.REFRESH_TOKEN,
+  );
+
+  res.cookie(
+    'access-token',
+    accessToken,
+    {
+      ...accessTokenOptions,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    },
+  );
+
+  res.cookie(
+    'refresh-token',
+    refreshToken,
+    {
+      ...refreshTokenOptions,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    },
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+  };
+}
+
 module.exports = {
   hashPassword,
   generateToken,
+  generateTokensAndCookie,
 };
