@@ -46,26 +46,24 @@ async function signIn(req, res) {
         );
     }
 
-    const accessToken = authHelper
-      .generateToken(
+    const {
+      accessToken,
+      refreshToken,
+    } = authHelper
+      .generateTokensAndCookie(
+        res,
         {
           _id: user._id,
         },
         {
-          expiresIn: '1h',
+          [enumHelper.TOKEN_TYPES.ACCESS_TOKEN]: {
+            expiresIn: '1h',
+          },
+          [enumHelper.TOKEN_TYPES.REFRESH_TOKEN]: {
+            expiresIn: '30d',
+          },
         },
-        enumHelper.TOKEN_TYPES.ACCESS_TOKEN,
-      );
 
-    const refreshToken = authHelper
-      .generateToken(
-        {
-          _id: user._id,
-        },
-        {
-          expiresIn: '30d',
-        },
-        enumHelper.TOKEN_TYPES.REFRESH_TOKEN,
       );
 
     await User
@@ -104,7 +102,7 @@ async function signUp(req, res) {
     const {
       name,
       email,
-      userTag,
+      tag,
       password,
     } = req.body;
 
@@ -116,7 +114,7 @@ async function signUp(req, res) {
               email: email,
             },
             {
-              userTag: userTag,
+              tag: tag,
             },
           ],
         },
@@ -127,7 +125,7 @@ async function signUp(req, res) {
         .status(enumHelper.RESPONSE_STATUS_CODES.BAD_REQUEST)
         .json(
           {
-            message: 'User with this email/userTag already exists',
+            message: 'User with this email/tag already exists',
           },
         );
     }
@@ -140,32 +138,29 @@ async function signUp(req, res) {
         {
           name: name,
           email: email,
-          userTag: userTag,
+          tag: tag,
           password: hashedPassword,
         },
       ))
       .toObject();
 
-    const accessToken = authHelper
-      .generateToken(
+    const {
+      accessToken,
+      refreshToken,
+    } = authHelper
+      .generateTokensAndCookie(
+        res,
         {
           _id: newUser._id,
         },
         {
-          expiresIn: '1h',
+          [enumHelper.TOKEN_TYPES.ACCESS_TOKEN]: {
+            expiresIn: '1h',
+          },
+          [enumHelper.TOKEN_TYPES.REFRESH_TOKEN]: {
+            expiresIn: '30d',
+          },
         },
-        enumHelper.TOKEN_TYPES.ACCESS_TOKEN,
-      );
-
-    const refreshToken = authHelper
-      .generateToken(
-        {
-          _id: newUser._id,
-        },
-        {
-          expiresIn: '30d',
-        },
-        enumHelper.TOKEN_TYPES.REFRESH_TOKEN,
       );
 
     await User
@@ -194,10 +189,68 @@ async function signUp(req, res) {
       );
   } catch (err) {
     console.error(err);
+
+    return res.status(enumHelper.RESPONSE_STATUS_CODES.BAD_REQUEST);
+  }
+}
+
+async function session(req, res) {
+  try {
+    const cookies = req.cookies;
+
+    const accessToken = cookies['access-token'];
+    const refreshToken = cookies['refresh-token'];
+
+    if (
+      !accessToken
+      && !refreshToken
+    ) {
+      return res
+        .status(401)
+        .end('Unauthorized');
+    }
+
+    const tokenPayload = authService
+      .validateToken(accessToken, enumHelper.TOKEN_TYPES.ACCESS_TOKEN);
+
+    const refreshTokenPayload = authService
+      .validateToken(refreshToken, enumHelper.TOKEN_TYPES.REFRESH_TOKEN);
+
+    if (!refreshTokenPayload) {
+      return res
+        .status(401)
+        .end('Session expired');
+    }
+
+    if (!tokenPayload) {
+      //  re-created access token and refresh token updated
+      const { accessToken: newAccessToken } = authHelper
+        .generateTokensAndCookie(
+          res,
+          refreshTokenPayload,
+          {},
+        );
+
+      res.header('Authorization', `Bearer ${newAccessToken}`);
+
+      // TODO: After refresh => rotate refresh token without time extending|Shifting
+    }
+
+    return res.json(
+      {
+        token: accessToken,
+      },
+    );
+  } catch (err) {
+    console.error(err);
+
+    return res.status(enumHelper.RESPONSE_STATUS_CODES.BAD_REQUEST);
   }
 }
 
 module.exports = {
   signIn,
   signUp,
+
+  session,
 };
