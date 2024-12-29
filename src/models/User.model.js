@@ -11,7 +11,7 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    userTag: {
+    tag: {
       type: String,
       required: true,
       unique: true,
@@ -21,10 +21,11 @@ const UserSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
-    refreshToken: {
-      type: String,
-      select: false,
-    },
+    // TODO: probably we need this one
+    // refreshToken: {
+    //   type: String,
+    //   select: false,
+    // },
   },
   {
     toObject: {
