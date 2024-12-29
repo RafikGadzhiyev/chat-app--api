@@ -1,7 +1,9 @@
 require('dotenv').config();
 
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const app = express();
 
@@ -10,8 +12,15 @@ const authRouter = require('./api/auth/auth.route');
 const PORT = process.env.PORT || 8080;
 
 app.use(
-  express.json(),
+  cors(
+    {
+      origin: process.env.FRONTEND_BASE_URL,
+      credentials: true,
+    },
+  ),
 );
+app.use(cookieParser());
+app.use(express.json());
 
 app.use(
   '/api/auth',
