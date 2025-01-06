@@ -8,6 +8,8 @@ const cors = require('cors');
 const app = express();
 
 const authRouter = require('./api/auth/auth.route');
+const chatRouter = require('./api/chat/chat.route');
+const userRouter = require('./api/user/user.route');
 
 const PORT = process.env.PORT || 8080;
 
@@ -22,10 +24,10 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
-app.use(
-  '/api/auth',
-  authRouter,
-);
+// Routes
+app.use('/api/auth', authRouter);
+app.use('/api/chat', chatRouter);
+app.use('/api/user', userRouter);
 
 app.listen(
   PORT,
