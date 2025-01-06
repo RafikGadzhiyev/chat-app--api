@@ -8,10 +8,10 @@ const ChatSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
     },
     memberEmails: {
       type: [String],
+      required: true,
     },
     meta: {
       membersCount: Number,
