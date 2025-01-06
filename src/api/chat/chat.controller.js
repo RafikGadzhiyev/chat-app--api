@@ -10,6 +10,22 @@ async function create(req, res) {
       memberEmails,
     } = req.body;
 
+    let isCurrentUserInMemberList = false;
+
+    for (let i = 0; i < req.body.memberEmails.length; i += 1) {
+      if (req.body.memberEmails[0] === req.user.email) {
+        isCurrentUserInMemberList = true;
+        break;
+      }
+    }
+
+    if (!isCurrentUserInMemberList) {
+      req.body.memberEmails
+        .push(
+          req.user.email,
+        );
+    }
+
     const actualMetadata = chatHelper
       .getActualMetadata(req.body);
 
