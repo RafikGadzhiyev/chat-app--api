@@ -25,9 +25,8 @@ const MessageSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
-    readBy: {
-      type: [String],
-    },
+    sentTo: [String],
+    readBy: [String],
     meta: {
       isEdited: Boolean,
       isForwarded: Boolean,
