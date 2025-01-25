@@ -222,6 +222,8 @@ async function session(req, res) {
         .end('Session expired');
     }
 
+    let updatedAccessToken = accessToken;
+
     if (!tokenPayload) {
       //  re-created access token and refresh token updated
       const { accessToken: newAccessToken } = authHelper
@@ -233,12 +235,22 @@ async function session(req, res) {
 
       res.header('Authorization', `Bearer ${newAccessToken}`);
 
+      updatedAccessToken = newAccessToken;
       // TODO: After refresh => rotate refresh token without time extending|Shifting
     }
 
+    const user = await User
+      .findOne(
+        {
+          _id: refreshTokenPayload._id,
+        },
+      )
+      .lean();
+
     return res.json(
       {
-        token: accessToken,
+        token: updatedAccessToken,
+        user: user,
       },
     );
   } catch (err) {
