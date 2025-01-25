@@ -10,8 +10,9 @@ async function isAuthenticated(req, res, next) {
 
     if (!authorizationHeader) {
       // TODO: do real redirect
-      res.redirect(enumHelper.ROUTES.SIGN_IN);
-      return;
+      // res.redirect(enumHelper.ROUTES.SIGN_IN);
+      return res.status(enumHelper.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .end();
     }
 
     const splittedAuthorizationHeader = authorizationHeader
@@ -21,8 +22,9 @@ async function isAuthenticated(req, res, next) {
 
     if (!token) {
       // TODO: do real redirect
-      res.redirect(enumHelper.ROUTES.SIGN_IN);
-      return;
+      // res.redirect(enumHelper.ROUTES.SIGN_IN);
+      return res.status(enumHelper.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .end();
     }
 
     const tokenPayload = authService
@@ -34,7 +36,7 @@ async function isAuthenticated(req, res, next) {
     const user =  await User
       .findOne(
         {
-          _id: tokenPayload._id,
+          _id: tokenPayload?._id,
         },
         {
           name: 1,
@@ -48,8 +50,9 @@ async function isAuthenticated(req, res, next) {
 
     if (!user) {
       // TODO: Do real redirect
-      res.redirect(enumHelper.ROUTES.SIGN_IN);
-      return;
+      // res.redirect(enumHelper.ROUTES.SIGN_IN);
+      return res.status(enumHelper.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .end();
     }
 
     req.user = user;
