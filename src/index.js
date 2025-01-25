@@ -1,11 +1,20 @@
 require('dotenv').config();
 
-const express = require('express');
-const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
+const express = require('express');
+const { createServer } = require('node:http');
+const { Server } = require('socket.io');
+const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
 const app = express();
+const server = createServer(app);
+const io = new Server(
+  server,
+  {
+    cors: process.env.FRONTEND_BASE_URL,
+  },
+);
 
 const authRouter = require('./api/auth/auth.route');
 const chatRouter = require('./api/chat/chat.route');
@@ -31,7 +40,7 @@ app.use('/api/chat', chatRouter);
 app.use('/api/user', userRouter);
 app.use('/api/message', messageRouter);
 
-app.listen(
+server.listen(
   PORT,
   async () => {
     try {
@@ -43,6 +52,14 @@ app.listen(
           heartbeatFrequencyMS: 10000,
         },
       );
+
+      io
+        .on(
+          'connection',
+          (socket) => {
+            console.log('New connection', socket.id);
+          },
+        );
 
       console.log('Database has connected');
       console.log(`Server is running on ${PORT} port`);
