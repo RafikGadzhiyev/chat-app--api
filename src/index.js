@@ -10,6 +10,7 @@ const app = express();
 const authRouter = require('./api/auth/auth.route');
 const chatRouter = require('./api/chat/chat.route');
 const userRouter = require('./api/user/user.route');
+const messageRouter = require('./api/message/message.route');
 
 const PORT = process.env.PORT || 8080;
 
@@ -28,6 +29,7 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/user', userRouter);
+app.use('/api/message', messageRouter);
 
 app.listen(
   PORT,
