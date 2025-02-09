@@ -19,8 +19,19 @@ const ROUTES = {
   CHATS: '/c',
 };
 
+const SOCKET_CLIENT_EMIT_EVENTS = {
+  NEW_MESSAGE: 'message:new',
+  USER_AFTER_LOGIN: 'user:after-login',
+};
+
+const SOCKET_EMIT_EVENT = {
+  BROADCAST_MESSAGE: 'message:broadcast',
+};
+
 module.exports = {
+  SOCKET_CLIENT_EMIT_EVENTS,
   RESPONSE_STATUS_CODES,
+  SOCKET_EMIT_EVENT,
   TOKEN_TYPES,
   ROUTES,
 };

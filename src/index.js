@@ -7,6 +7,10 @@ const { Server } = require('socket.io');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
+const Chat = require('./models/Chat.model');
+
+const enumHelper = require('./helpers/enum.helper');
+
 const app = express();
 const server = createServer(app);
 const io = new Server(
@@ -58,6 +62,47 @@ server.listen(
           'connection',
           (socket) => {
             console.log('New connection', socket.id);
+
+            socket.on(
+              enumHelper.SOCKET_CLIENT_EMIT_EVENTS.USER_AFTER_LOGIN,
+              (payload) => {
+                if (socket.rooms.has(`user:${payload.email}`)) {
+                  return;
+                }
+                // Unique user room
+                socket.join(`user:${payload.email}`);
+              },
+            );
+
+            socket.on(
+              enumHelper.SOCKET_CLIENT_EMIT_EVENTS.NEW_MESSAGE,
+              async (payload) => {
+                const chat = await Chat
+                  .findOne(
+                    {
+                      _id: payload.message.chatId,
+                    },
+                    {
+                      memberEmails: 1,
+                    },
+                  )
+                  .lean();
+
+                for (let i = 0; i < chat.memberEmails.length; i += 1) {
+                  const memberEmail = chat.memberEmails[i];
+
+                  const memberUniqueSocketChannel = `user:${memberEmail}`;
+
+                  socket.to(memberUniqueSocketChannel)
+                    .emit(
+                      enumHelper.SOCKET_EMIT_EVENT.BROADCAST_MESSAGE,
+                      {
+                        message: payload.message,
+                      },
+                    );
+                }
+              },
+            );
           },
         );
 
